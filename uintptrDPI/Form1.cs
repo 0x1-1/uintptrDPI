@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Management;
@@ -22,46 +22,46 @@ namespace uintptrDPI
             listBoxLogs.Items.Clear();
             try
             {
-                Log("En son sürüm ZIP dosyasının bağlantısı alınıyor...");
+                Log("Getting the link for the latest version ZIP file...");
                 string latestZipUrl = await GetLatestReleaseZipUrl();
                 if (string.IsNullOrEmpty(latestZipUrl))
                 {
-                    Log("En son sürüm ZIP bağlantısı bulunamadı!", true);
+                    Log("Latest version ZIP link not found!", true);
                     return;
                 }
-                Log($"ZIP bağlantısı bulundu: {latestZipUrl}");
+                Log($"ZIP link found: {latestZipUrl}");
                 string zipPath = Path.Combine(Path.GetTempPath(), "GoodbyeDPI-Turkey.zip");
-                Log("ZIP dosyası indiriliyor...");
+                Log("Downloading the ZIP file...");
                 await DownloadFileAsync(latestZipUrl, zipPath);
-                Log("ZIP dosyası başarıyla indirildi.");
-                Log($"Hedef klasör oluşturuluyor: {TargetFolder}");
+                Log("The ZIP file has been downloaded successfully.");
+                Log($"Creating target folder: {TargetFolder}");
                 if (!Directory.Exists(TargetFolder))
                     Directory.CreateDirectory(TargetFolder);
-                Log("Hedef klasör hazır.");
-                Log("ZIP dosyası çıkarılıyor...");
+                Log("Target folder is ready.");
+                Log("Extracting the ZIP file...");
                 ZipFile.ExtractToDirectory(zipPath, TargetFolder, true);
-                Log("ZIP dosyası başarıyla çıkarıldı.");
+                Log("The ZIP file has been extracted successfully.");
                 string cmdFilePath = Path.Combine(TargetFolder, CmdFileName);
                 if (!File.Exists(cmdFilePath))
                 {
-                    Log("CMD dosyası bulunamadı!", true);
+                    Log("CMD file could not be found!", true);
                     return;
                 }
-                Log($"CMD dosyası bulundu: {cmdFilePath}");
+                Log($"CMD file found: {cmdFilePath}");
 
-                Log("CMD dosyası yönetici olarak çalıştırılıyor...");
+                Log("The CMD file is being run as administrator...");
                 bool cmdResult = RunAsAdmin(cmdFilePath, "Y");
-                Log(cmdResult ? "Servis başarıyla kuruldu." : "Servis kurulamadı!", !cmdResult);
+                Log(cmdResult ? "Service installed successfully." : "Service installation failed!", !cmdResult);
 
                 if (cmdResult)
                 {
-                    Log("Servisin başlangıç türü kontrol ediliyor...");
+                    Log("Checking the service startup type...");
                     EnsureServiceStartupType("GoodByeDPI");
                 }
             }
             catch (Exception ex)
             {
-                Log($"Hata: {ex.Message}", true);
+                Log($"Error: {ex.Message}", true);
             }
         }
 
@@ -77,7 +77,7 @@ namespace uintptrDPI
 
                     HttpResponseMessage response = await client.GetAsync(apiUrl);
                     if (!response.IsSuccessStatusCode)
-                        throw new Exception("GitHub API'ye erişilemedi.");
+                        throw new Exception("Unable to access the GitHub API.");
 
                     string json = await response.Content.ReadAsStringAsync();
 
@@ -89,13 +89,13 @@ namespace uintptrDPI
                     }
                     else
                     {
-                        throw new Exception("ZIP bağlantısı API'den alınamadı.");
+                        throw new Exception("The ZIP link could not be retrieved from the API.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log($"Hata: {ex.Message}", true);
+                Log($"Error: {ex.Message}", true);
                 return null;
             }
         }
@@ -108,14 +108,14 @@ namespace uintptrDPI
                 {
                     if (sc.Status == ServiceControllerStatus.Stopped)
                     {
-                        Log($"Servis '{serviceName}' durdurulmuş. Başlatılıyor...");
+                        Log($"Service '{serviceName}' stopped. Starting...");
                         sc.Start();
                         sc.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-                        Log($"Servis '{serviceName}' başarıyla başlatıldı.");
+                        Log($"Service '{serviceName}' started successfully.");
                     }
                     else
                     {
-                        Log($"Servis '{serviceName}' çalışıyor.");
+                        Log($"Service '{serviceName}' is running.");
                     }
                 }
 
@@ -126,20 +126,20 @@ namespace uintptrDPI
                     string startMode = service["StartMode"]?.ToString();
                     if (startMode != "Auto")
                     {
-                        Log($"Servis '{serviceName}' başlangıç türü '{startMode}' olarak ayarlanmış. 'Otomatik' olarak değiştiriliyor...");
+                        Log($"Service '{serviceName}' startup type is set to '{startMode}'. Changing to 'Automatic'...");
                         service["StartMode"] = "Auto";
                         service.Put();
-                        Log($"Servis '{serviceName}' başlangıç türü başarıyla 'Otomatik' olarak ayarlandı.");
+                        Log($"Service '{serviceName}' startup type successfully set to 'Automatic'.");
                     }
                     else
                     {
-                        Log($"Servis '{serviceName}' başlangıç türü zaten 'Otomatik'.");
+                        Log($"Service '{serviceName}' startup type is already 'Automatic'.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Log($"Servis '{serviceName}' başlangıç türü kontrolü sırasında hata: {ex.Message}", true);
+                Log($"Error occurred while checking the startup type of service '{serviceName}': {ex.Message}", true);
             }
         }
 
@@ -192,17 +192,17 @@ namespace uintptrDPI
 
                     if (process.ExitCode != 0)
                     {
-                        Log($"CMD hatası: {error}", true);
+                        Log($"CMD error: {error}", true);
                         return false;
                     }
 
-                    Log($"CMD çıktısı: {output}");
+                    Log($"CMD output: {output}");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                Log($"Hata: {ex.Message}", true);
+                Log($"Error: {ex.Message}", true);
                 return false;
             }
         }
@@ -219,8 +219,8 @@ namespace uintptrDPI
         private void Close_Click(object sender, EventArgs e)
         {
             DialogResult result = MessageBox.Show(
-                "C:\\uintptrDPI dizinindeki dosyaları silmeniz halinde program düzgün çalışmayacaktır.",
-                "Uyarı",
+                "Deleting files in the C:\\uintptrDPI directory may cause the program to not function correctly.",
+                "Warning",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             );

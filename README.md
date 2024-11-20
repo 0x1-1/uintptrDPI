@@ -1,19 +1,18 @@
-# uintptrDPI | Install GoodByeDPI One Click
+# uintptrDPI
 
-**uintptrDPI** is a tool designed to easily install and manage the GoodbyeDPI application via a C# Windows Forms application. It automates the installation process, provides feedback to the user, and ensures the service is properly installed.
+**uintptrDPI** is a tool developed to help bypass access restrictions in Turkey by automatically downloading and installing the **GoodbyeDPI** software, a fork of ValdikSS's GoodbyeDPI, developed by cagritaskn. This tool ensures continuous access by configuring the system to run at startup.
 
 ## Features
+- Automatically downloads and installs **GoodbyeDPI** (cagritaskn fork) to bypass access restrictions.
+- Configures the system to run **GoodbyeDPI** at startup for continuous access.
 
-- **Latest Version Download**: The application automatically finds and downloads the latest GoodbyeDPI release from GitHub.
-- **Service Installation**: It downloads the ZIP file, extracts it to the specified folder, and automates the service installation.
-- **Run as Administrator**: The necessary file is executed with administrator privileges to install the service.
-- **Startup Type Check**: It automatically sets the service's startup type to 'Automatic' so that it starts on system reboot.
-- **Shutdown Warning**: The program warns the user not to delete files in the target directory before closing, ensuring the program works properly.
+For more details about **GoodbyeDPI**, you can visit the original project at [ValdikSS GoodbyeDPI](https://github.com/ValdikSS/GoodbyeDPI) and the [cagritaskn fork GoodbyeDPI](https://github.com/cagritaskn/GoodbyeDPI-Turkey) to download it manually.
 
-## Contributing
+## Acknowledgements
+Special thanks to the original creator of **GoodbyeDPI**, [ValdikSS](https://github.com/ValdikSS/GoodbyeDPI), for their incredible work in developing the original software.
 
-This is an open-source project, and contributions are welcome. 
+## Contribution
+If you encounter any issues or have improvements to suggest, feel free to create a pull request. Contributions are welcome!
 
 ## License
-
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

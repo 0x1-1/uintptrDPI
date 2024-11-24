@@ -229,5 +229,65 @@ namespace uintptrDPI
                 Application.Exit();
             }
         }
+
+        private void btnCheckStatus_Click(object sender, EventArgs e)
+        {
+            string serviceName = "GoodByeDPI";
+
+            try
+            {
+               
+                using (ServiceController sc = new ServiceController(serviceName))
+                {
+                    listBoxLogs.Items.Clear();
+                    if (sc.Status == ServiceControllerStatus.Running)
+                    {
+                        Log($"Service '{serviceName}' is running and set to start automatically.");
+
+                        using (ManagementObject service = new ManagementObject($"Win32_Service.Name='{serviceName}'"))
+                        {
+                            service.Get();
+                            string startMode = service["StartMode"]?.ToString();
+
+                            if (startMode == "Auto")
+                            {
+                                MessageBox.Show(
+                                    "The service is running and configured to start automatically.",
+                                    "Service Status",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Information
+                                );
+                                return; 
+                            }
+                        }
+                    }
+
+                    
+                    MessageBox.Show(
+                        "Service is not running or is not set to start automatically. Attempting to fix...",
+                        "Service Status",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+
+                   
+                    btnInstallService_Click(sender, e);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error occurred while checking service status: {ex.Message}", true);
+                MessageBox.Show(
+                    $"An error occurred while checking the service status: {ex.Message}",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+
+                
+                btnInstallService_Click(sender, e);
+            }
+        }
+
     }
 }

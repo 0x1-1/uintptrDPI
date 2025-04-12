@@ -1,8 +1,8 @@
-using System.Diagnostics;
-using System.IO.Compression;
+using System;
+using System.IO;
 using System.Text.RegularExpressions;
-using System.Management;
-using System.ServiceProcess;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace uintptrDPI
 {
@@ -11,57 +11,74 @@ namespace uintptrDPI
         private const string ReleasesUrl = "https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases";
         private const string TargetFolder = @"C:\uintptrDPI";
         private const string CmdFileName = "service_install_dnsredir_turkey.cmd";
+        private const string ServiceName = "GoodByeDPI";
+
+        private readonly FileDownloader _fileDownloader;
+        private readonly ServiceManager _serviceManager;
 
         public Form1()
         {
             InitializeComponent();
+            _fileDownloader = new FileDownloader(progressBarDownload, labelStatus);
+            _serviceManager = new ServiceManager(ServiceName);
         }
 
         private async void btnInstallService_Click(object sender, EventArgs e)
         {
-            listBoxLogs.Items.Clear();
             try
             {
-                Log("Getting the link for the latest version ZIP file...");
+                listBoxLogs.Items.Clear();
+                Log("En son sürüm ZIP dosyası için bağlantı alınıyor...");
+                
                 string latestZipUrl = await GetLatestReleaseZipUrl();
                 if (string.IsNullOrEmpty(latestZipUrl))
                 {
-                    Log("Latest version ZIP link not found!", true);
+                    Log("En son sürüm ZIP bağlantısı bulunamadı!", true);
                     return;
                 }
-                Log($"ZIP link found: {latestZipUrl}");
+
+                Log($"ZIP bağlantısı bulundu: {latestZipUrl}");
                 string zipPath = Path.Combine(Path.GetTempPath(), "GoodbyeDPI-Turkey.zip");
-                Log("Downloading the ZIP file...");
-                await DownloadFileAsync(latestZipUrl, zipPath);
-                Log("The ZIP file has been downloaded successfully.");
-                Log($"Creating target folder: {TargetFolder}");
+
+                Log("ZIP dosyası indiriliyor...");
+                await _fileDownloader.DownloadFileAsync(latestZipUrl, zipPath);
+                Log("ZIP dosyası başarıyla indirildi.");
+
+                Log($"Hedef klasör oluşturuluyor: {TargetFolder}");
                 if (!Directory.Exists(TargetFolder))
                     Directory.CreateDirectory(TargetFolder);
-                Log("Target folder is ready.");
-                Log("Extracting the ZIP file...");
-                ZipFile.ExtractToDirectory(zipPath, TargetFolder, true);
-                Log("The ZIP file has been extracted successfully.");
+                Log("Hedef klasör hazır.");
+
+                Log("ZIP dosyası açılıyor...");
+                System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, TargetFolder, true);
+                Log("ZIP dosyası başarıyla açıldı.");
+
                 string cmdFilePath = Path.Combine(TargetFolder, CmdFileName);
                 if (!File.Exists(cmdFilePath))
                 {
-                    Log("CMD file could not be found!", true);
+                    Log("CMD dosyası bulunamadı!", true);
                     return;
                 }
-                Log($"CMD file found: {cmdFilePath}");
 
-                Log("The CMD file is being run as administrator...");
-                bool cmdResult = RunAsAdmin(cmdFilePath, "Y");
-                Log(cmdResult ? "Service installed successfully." : "Service installation failed!", !cmdResult);
+                Log($"CMD dosyası bulundu: {cmdFilePath}");
+                Log("CMD dosyası yönetici olarak çalıştırılıyor...");
 
-                if (cmdResult)
+                bool installationResult = await _serviceManager.InstallService(cmdFilePath);
+                Log(installationResult ? "Servis başarıyla kuruldu." : "Servis kurulumu başarısız oldu!", !installationResult);
+
+                if (installationResult)
                 {
-                    Log("Checking the service startup type...");
-                    EnsureServiceStartupType("GoodByeDPI");
+                    var serviceStatus = await _serviceManager.GetServiceStatus();
+                    if (serviceStatus != null)
+                    {
+                        Log($"Servis durumu: {serviceStatus.Status}");
+                        Log($"Başlangıç tipi: {serviceStatus.StartType}");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Log($"Error: {ex.Message}", true);
+                ErrorHandler.HandleError(ex, "Servis kurulumu sırasında");
             }
         }
 
@@ -71,139 +88,28 @@ namespace uintptrDPI
             {
                 string apiUrl = "https://api.github.com/repos/cagritaskn/GoodbyeDPI-Turkey/releases/latest";
 
-                using (HttpClient client = new HttpClient())
+                using (var client = new System.Net.Http.HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "ServiceManagerApp");
-
-                    HttpResponseMessage response = await client.GetAsync(apiUrl);
-                    if (!response.IsSuccessStatusCode)
-                        throw new Exception("Unable to access the GitHub API.");
+                    var response = await client.GetAsync(apiUrl);
+                    response.EnsureSuccessStatusCode();
 
                     string json = await response.Content.ReadAsStringAsync();
-
                     var regex = new Regex("\"browser_download_url\":\\s*\"(https://.*?\\.zip)\"");
-                    Match match = regex.Match(json);
+                    var match = regex.Match(json);
+
                     if (match.Success)
                     {
                         return match.Groups[1].Value;
                     }
-                    else
-                    {
-                        throw new Exception("The ZIP link could not be retrieved from the API.");
-                    }
+
+                    throw new Exception("API'den ZIP bağlantısı alınamadı.");
                 }
             }
             catch (Exception ex)
             {
-                Log($"Error: {ex.Message}", true);
+                ErrorHandler.HandleError(ex, "En son sürüm URL'si alınırken");
                 return null;
-            }
-        }
-
-        private void EnsureServiceStartupType(string serviceName)
-        {
-            try
-            {
-                using (ServiceController sc = new ServiceController(serviceName))
-                {
-                    if (sc.Status == ServiceControllerStatus.Stopped)
-                    {
-                        Log($"Service '{serviceName}' stopped. Starting...");
-                        sc.Start();
-                        sc.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-                        Log($"Service '{serviceName}' started successfully.");
-                    }
-                    else
-                    {
-                        Log($"Service '{serviceName}' is running.");
-                    }
-                }
-
-                using (ManagementObject service = new ManagementObject($"Win32_Service.Name='{serviceName}'"))
-                {
-                    service.Get();
-
-                    string startMode = service["StartMode"]?.ToString();
-                    if (startMode != "Auto")
-                    {
-                        Log($"Service '{serviceName}' startup type is set to '{startMode}'. Changing to 'Automatic'...");
-                        service["StartMode"] = "Auto";
-                        service.Put();
-                        Log($"Service '{serviceName}' startup type successfully set to 'Automatic'.");
-                    }
-                    else
-                    {
-                        Log($"Service '{serviceName}' startup type is already 'Automatic'.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"Error occurred while checking the startup type of service '{serviceName}': {ex.Message}", true);
-            }
-        }
-
-        private async Task DownloadFileAsync(string url, string filePath)
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                using (HttpResponseMessage response = await client.GetAsync(url))
-                {
-                    response.EnsureSuccessStatusCode();
-                    using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-                    {
-                        await response.Content.CopyToAsync(fs);
-                    }
-                }
-            }
-        }
-
-        private bool RunAsAdmin(string filePath, string arguments)
-        {
-            try
-            {
-                ProcessStartInfo psi = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c \"{filePath}\" {arguments}",
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using (Process process = new Process { StartInfo = psi })
-                {
-                    process.Start();
-
-                    using (StreamWriter writer = process.StandardInput)
-                    {
-                        if (writer.BaseStream.CanWrite)
-                        {
-                            writer.WriteLine("Y");
-                        }
-                    }
-
-                    string output = process.StandardOutput.ReadToEnd();
-                    string error = process.StandardError.ReadToEnd();
-
-                    process.WaitForExit();
-
-                    if (process.ExitCode != 0)
-                    {
-                        Log($"CMD error: {error}", true);
-                        return false;
-                    }
-
-                    Log($"CMD output: {output}");
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"Error: {ex.Message}", true);
-                return false;
             }
         }
 
@@ -216,78 +122,43 @@ namespace uintptrDPI
             }
         }
 
+        private async void btnCheckStatus_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                listBoxLogs.Items.Clear();
+                var serviceStatus = await _serviceManager.GetServiceStatus();
+
+                if (serviceStatus != null)
+                {
+                    Log($"Servis adı: {serviceStatus.Name}");
+                    Log($"Durum: {serviceStatus.Status}");
+                    Log($"Başlangıç tipi: {serviceStatus.StartType}");
+                }
+                else
+                {
+                    Log("Servis durumu alınamadı!", true);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.HandleError(ex, "Servis durumu kontrol edilirken");
+            }
+        }
+
         private void Close_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(
-                "Deleting files in the C:\\uintptrDPI directory may cause the program to not function correctly.",
-                "Warning",
+            var result = MessageBox.Show(
+                "C:\\uintptrDPI dizinindeki dosyaları silmek programın düzgün çalışmamasına neden olabilir.",
+                "Uyarı",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning
             );
+
             if (result == DialogResult.OK)
             {
                 Application.Exit();
             }
         }
-
-        private void btnCheckStatus_Click(object sender, EventArgs e)
-        {
-            string serviceName = "GoodByeDPI";
-
-            try
-            {
-               
-                using (ServiceController sc = new ServiceController(serviceName))
-                {
-                    listBoxLogs.Items.Clear();
-                    if (sc.Status == ServiceControllerStatus.Running)
-                    {
-                        Log($"Service '{serviceName}' is running and set to start automatically.");
-
-                        using (ManagementObject service = new ManagementObject($"Win32_Service.Name='{serviceName}'"))
-                        {
-                            service.Get();
-                            string startMode = service["StartMode"]?.ToString();
-
-                            if (startMode == "Auto")
-                            {
-                                MessageBox.Show(
-                                    "The service is running and configured to start automatically.",
-                                    "Service Status",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information
-                                );
-                                return; 
-                            }
-                        }
-                    }
-
-                    
-                    MessageBox.Show(
-                        "Service is not running or is not set to start automatically. Attempting to fix...",
-                        "Service Status",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
-
-                   
-                    btnInstallService_Click(sender, e);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"Error occurred while checking service status: {ex.Message}", true);
-                MessageBox.Show(
-                    $"An error occurred while checking the service status: {ex.Message}",
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-
-                
-                btnInstallService_Click(sender, e);
-            }
-        }
-
     }
 }

@@ -53,7 +53,7 @@ namespace uintptrDPI
                             {
                                 _progressBar.Value = (int)totalRead;
                                 _statusLabel?.Invoke((MethodInvoker)(() => 
-                                    _statusLabel.Text = $"İndiriliyor: {totalRead * 100 / totalBytes}%"
+                                    _statusLabel.Text = $"Downloading: {totalRead * 100 / totalBytes}%"
                                 ));
                             }
                         }
@@ -65,7 +65,7 @@ namespace uintptrDPI
                         if (actualHash != expectedHash)
                         {
                             File.Delete(destinationPath);
-                            throw new Exception("Dosya hash değeri doğrulaması başarısız oldu.");
+                            throw new Exception("File hash validation failed.");
                         }
                     }
 
@@ -74,7 +74,7 @@ namespace uintptrDPI
             }
             catch (Exception ex)
             {
-                ErrorHandler.HandleError(ex, "Dosya indirme işlemi sırasında");
+                ErrorHandler.HandleError(ex, "An error occurred while downloading the file.");
                 throw;
             }
         }
@@ -89,4 +89,4 @@ namespace uintptrDPI
             }
         }
     }
-} 
+}

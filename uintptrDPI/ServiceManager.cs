@@ -26,14 +26,14 @@ namespace uintptrDPI
                     process.StartInfo.RedirectStandardOutput = true;
                     process.StartInfo.RedirectStandardError = true;
                     process.StartInfo.CreateNoWindow = true;
-                    process.StartInfo.Verb = "runas"; // Yönetici olarak çalıştır
+                    process.StartInfo.Verb = "runas"; // Run as administrator
 
                     process.Start();
                     await process.WaitForExitAsync();
 
                     if (process.ExitCode != 0)
                     {
-                        throw new Exception($"Servis kurulumu başarısız oldu. Çıkış kodu: {process.ExitCode}");
+                        throw new Exception($"Service installation failed. Exit code: {process.ExitCode}");
                     }
 
                     return await SetServiceStartupType(ServiceStartMode.Automatic);
@@ -41,7 +41,7 @@ namespace uintptrDPI
             }
             catch (Exception ex)
             {
-                ErrorHandler.HandleError(ex, "Servis kurulumu sırasında");
+                ErrorHandler.HandleError(ex, "An error occurred during service installation.");
                 return false;
             }
         }
@@ -60,7 +60,7 @@ namespace uintptrDPI
             }
             catch (Exception ex)
             {
-                ErrorHandler.HandleError(ex, "Servis başlangıç tipi ayarlanırken");
+                ErrorHandler.HandleError(ex, "An error occurred while setting the service startup type.");
                 return false;
             }
         }
@@ -81,7 +81,7 @@ namespace uintptrDPI
             }
             catch (Exception ex)
             {
-                ErrorHandler.HandleError(ex, "Servis durumu kontrol edilirken");
+                ErrorHandler.HandleError(ex, "An error occurred while checking the service status.");
                 return null;
             }
         }
@@ -109,4 +109,4 @@ namespace uintptrDPI
         public ServiceControllerStatus Status { get; set; }
         public ServiceStartMode StartType { get; set; }
     }
-} 
+}

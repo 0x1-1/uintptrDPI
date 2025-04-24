@@ -7,10 +7,10 @@ namespace uintptrDPI
     {
         public static void HandleError(Exception ex, string context, bool showMessageBox = true)
         {
-            string errorMessage = $"Hata Detayları:\n" +
-                                $"Bağlam: {context}\n" +
-                                $"Hata Türü: {ex.GetType().Name}\n" +
-                                $"Mesaj: {ex.Message}\n" +
+            string errorMessage = $"Error Details:\n" +
+                                $"Context: {context}\n" +
+                                $"Error Type: {ex.GetType().Name}\n" +
+                                $"Message: {ex.Message}\n" +
                                 $"Stack Trace: {ex.StackTrace}";
 
             // Log dosyasına kaydet
@@ -20,9 +20,9 @@ namespace uintptrDPI
             if (showMessageBox)
             {
                 MessageBox.Show(
-                    $"Bir hata oluştu:\n{ex.Message}\n\n" +
-                    "Daha fazla detay için log dosyasını kontrol edin.",
-                    "Hata",
+                    $"An error occurred:\n{ex.Message}\n\n" +
+                    "Check the log file for more details.",
+                    "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );
@@ -44,8 +44,8 @@ namespace uintptrDPI
             }
             catch
             {
-                // Log yazma hatası durumunda sessizce devam et
+                // Continue silently in case of a log writing error
             }
         }
     }
-} 
+}

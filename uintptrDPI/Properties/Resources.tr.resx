@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="InstallServiceButton" xml:space="preserve">
+    <value>Servisi Kur/Güncelle</value>
+  </data>
+  <data name="CheckStatusButton" xml:space="preserve">
+    <value>Servis Durumunu Kontrol Et</value>
+  </data>
+  <data name="StartServiceButton" xml:space="preserve">
+    <value>Servisi Başlat</value>
+  </data>
+  <data name="StopServiceButton" xml:space="preserve">
+    <value>Servisi Durdur</value>
+  </data>
+  <data name="UninstallServiceButton" xml:space="preserve">
+    <value>Servisi Kaldır</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>GoodbyeDPI Yönetim Paneli</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>Dil</value>
+  </data>
+  <data name="StatusLabel" xml:space="preserve">
+    <value>Durum</value>
+  </data>
+  <data name="StatusNotInstalled" xml:space="preserve">
+    <value>Yüklü Değil</value>
+  </data>
+  <data name="StatusRunning" xml:space="preserve">
+    <value>Çalışıyor</value>
+  </data>
+  <data name="StatusStopped" xml:space="preserve">
+    <value>Durduruldu</value>
+  </data>
+  <data name="StatusPaused" xml:space="preserve">
+    <value>Duraklatıldı</value>
+  </data>
+  <data name="StatusStopPending" xml:space="preserve">
+    <value>Durduruluyor</value>
+  </data>
+  <data name="StatusStartPending" xml:space="preserve">
+    <value>Başlatılıyor</value>
+  </data>
+  <data name="StatusContinuePending" xml:space="preserve">
+    <value>Devam Ettiriliyor</value>
+  </data>
+  <data name="StatusPausePending" xml:space="preserve">
+    <value>Duraklatılıyor</value>
+  </data>
+</root>

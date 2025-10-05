@@ -10,17 +10,17 @@ namespace uintptrDPI
     public class FileDownloader
     {
         private readonly HttpClient _httpClient;
-        private readonly ProgressBar _progressBar;
-        private readonly Label _statusLabel;
+        private readonly ProgressBar? _progressBar;
+        private readonly Label? _statusLabel;
 
-        public FileDownloader(ProgressBar progressBar = null, Label statusLabel = null)
+        public FileDownloader(ProgressBar? progressBar = null, Label? statusLabel = null)
         {
             _httpClient = new HttpClient();
             _progressBar = progressBar;
             _statusLabel = statusLabel;
         }
 
-        public async Task<string> DownloadFileAsync(string url, string destinationPath, string expectedHash = null)
+        public async Task<string> DownloadFileAsync(string url, string destinationPath, string? expectedHash = null)
         {
             try
             {
@@ -31,7 +31,7 @@ namespace uintptrDPI
                     var totalBytes = response.Content.Headers.ContentLength ?? -1L;
                     var canReportProgress = totalBytes != -1 && _progressBar != null;
 
-                    if (canReportProgress)
+                    if (canReportProgress && _progressBar != null)
                     {
                         _progressBar.Maximum = (int)totalBytes;
                         _progressBar.Value = 0;
@@ -49,12 +49,14 @@ namespace uintptrDPI
                             await fileStream.WriteAsync(buffer, 0, bytesRead);
                             totalRead += bytesRead;
 
-                            if (canReportProgress)
+                            if (canReportProgress && _progressBar != null)
                             {
                                 _progressBar.Value = (int)totalRead;
-                                _statusLabel?.Invoke((MethodInvoker)(() => 
-                                    _statusLabel.Text = $"Downloading: {totalRead * 100 / totalBytes}%"
-                                ));
+                                if (_statusLabel != null) {
+                                    _statusLabel.Invoke((MethodInvoker)(() => 
+                                        _statusLabel.Text = $"Downloading: {totalRead * 100 / totalBytes}%"
+                                    ));
+                                }
                             }
                         }
                     }

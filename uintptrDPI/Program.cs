@@ -1,3 +1,7 @@
+using System;
+using System.Security.Principal;
+using System.Windows.Forms;
+
 namespace uintptrDPI
 {
     internal static class Program
@@ -8,10 +12,23 @@ namespace uintptrDPI
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+
+            if (!IsAdministrator())
+            {
+                MessageBox.Show("Bu uygulamanın düzgün çalışabilmesi için yönetici olarak çalıştırılması gerekmektedir.", "Yönetici İzni Gerekli", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Application.Exit();
+                return;
+            }
+
             Application.Run(new Form1());
+        }
+
+        public static bool IsAdministrator()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
     }
 }

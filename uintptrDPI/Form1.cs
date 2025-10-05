@@ -27,6 +27,7 @@ namespace uintptrDPI
             _serviceManager = new ServiceManager(ServiceName);
             this.Load += new System.EventHandler(this.Form1_Load);
             UpdateUIResources();
+            Log("Application starting...");
         }
 
         private void UpdateUIResources()
@@ -145,6 +146,7 @@ namespace uintptrDPI
             if (status != null)
             {
                 lblStatus.Text = $"{Resources.StatusLabel}: {GetLocalizedStatusString(status.Status)}";
+                Log($"Service status: {GetLocalizedStatusString(status.Status)}");
                 bool isRunning = status.Status == System.ServiceProcess.ServiceControllerStatus.Running;
                 btnStartService.Enabled = !isRunning;
                 btnStopService.Enabled = isRunning;
@@ -154,6 +156,7 @@ namespace uintptrDPI
             else
             {
                 lblStatus.Text = $"{Resources.StatusLabel}: {Resources.StatusNotInstalled}";
+                Log("Service is not installed.");
                 btnStartService.Enabled = false;
                 btnStopService.Enabled = false;
                 btnInstallService.Enabled = true;

@@ -20,7 +20,7 @@ namespace uintptrDPI
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(500, 350);
-            this.Text = "uintptrDPI - GoodbyeDPI Management Panel";
+            this.Text = "uintptrDPI - GoodbyeDPI Installer";
             this.BackColor = System.Drawing.Color.FromArgb(45, 45, 48);
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -108,6 +108,7 @@ namespace uintptrDPI
         private System.Windows.Forms.Button btnStartService;
         private System.Windows.Forms.Button btnStopService;
         private System.Windows.Forms.Button btnUninstallService;
+        private System.Windows.Forms.Button btnCheckStatus;
         private System.Windows.Forms.RichTextBox richTextBoxLogs;
         private System.Windows.Forms.ProgressBar progressBarDownload;
     }

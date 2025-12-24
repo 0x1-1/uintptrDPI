@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.ServiceProcess;
 using System.Windows.Forms;
 using uintptrDPI.Properties;
 
@@ -19,28 +20,47 @@ namespace uintptrDPI
 
         private readonly FileDownloader _fileDownloader;
         private readonly ServiceManager _serviceManager;
+        private bool _isUpdatingLanguage;
 
         public Form1()
         {
             InitializeComponent();
-            _fileDownloader = new FileDownloader(progressBarDownload, null);
+            _fileDownloader = new FileDownloader(progressBarDownload, lblDownloadStatus);
             _serviceManager = new ServiceManager(ServiceName);
+            InitializeLanguageOptions();
             this.Load += new System.EventHandler(this.Form1_Load);
             UpdateUIResources();
             Log("Application starting...");
         }
 
+        private void InitializeLanguageOptions()
+        {
+            _isUpdatingLanguage = true;
+            comboLanguage.Items.Clear();
+            comboLanguage.Items.Add("English");
+            comboLanguage.Items.Add("Türkçe");
+            comboLanguage.SelectedIndex = Thread.CurrentThread.CurrentUICulture.Name.StartsWith("tr", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+            _isUpdatingLanguage = false;
+        }
+
         private void UpdateUIResources()
         {
             this.Text = Resources.TitleLabel;
-            this.languageToolStripMenuItem.Text = Resources.LanguageLabel;
-            this.englishToolStripMenuItem.Text = "English";
-            this.turkishToolStripMenuItem.Text = "Türkçe";
             this.btnInstallService.Text = Resources.InstallServiceButton;
             this.btnStartService.Text = Resources.StartServiceButton;
             this.btnStopService.Text = Resources.StopServiceButton;
             this.btnUninstallService.Text = Resources.UninstallServiceButton;
             this.btnCheckStatus.Text = Resources.CheckStatusButton;
+            this.groupActions.Text = Resources.ActionsGroupLabel;
+            this.groupLogs.Text = Resources.LogsGroupLabel;
+            this.lblTitle.Text = Resources.TitleLabel;
+            this.lblSubtitle.Text = Resources.SubtitleLabel;
+            this.lblDownloadStatus.Text = Resources.DownloadStatusReady;
+            _fileDownloader.ProgressPrefix = Resources.DownloadStatusInProgress;
+            this.lblLanguage.Text = Resources.LanguageLabel;
+            _isUpdatingLanguage = true;
+            comboLanguage.SelectedIndex = Thread.CurrentThread.CurrentUICulture.Name.StartsWith("tr", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+            _isUpdatingLanguage = false;
         }
 
         private async void Form1_Load(object? sender, EventArgs e)
@@ -52,17 +72,21 @@ namespace uintptrDPI
         {
             Thread.CurrentThread.CurrentUICulture = new CultureInfo(lang);
             UpdateUIResources();
-            await CheckServiceStatus(); // Re-check and update status label in the new language
+            await CheckServiceStatus();
         }
 
-        private void englishToolStripMenuItem_Click(object? sender, EventArgs e)
+        private void comboLanguage_SelectedIndexChanged(object? sender, EventArgs e)
         {
+            if (_isUpdatingLanguage)
+                return;
+
+            if (comboLanguage.SelectedIndex == 1)
+            {
+                ChangeLanguage("tr-TR");
+                return;
+            }
+
             ChangeLanguage("en-US");
-        }
-
-        private void turkishToolStripMenuItem_Click(object? sender, EventArgs e)
-        {
-            ChangeLanguage("tr-TR");
         }
 
         private async void btnInstallService_Click(object? sender, EventArgs e)
@@ -70,6 +94,7 @@ namespace uintptrDPI
             try
             {
                 Log("Starting installation...");
+                lblDownloadStatus.Text = Resources.DownloadStatusStarting;
                 string? latestZipUrl = await GetLatestReleaseZipUrl();
                 if (string.IsNullOrEmpty(latestZipUrl))
                 {
@@ -79,7 +104,7 @@ namespace uintptrDPI
 
                 string zipPath = Path.Combine(Path.GetTempPath(), "GoodbyeDPI-Turkey.zip");
                 await _fileDownloader.DownloadFileAsync(latestZipUrl, zipPath);
-                
+
                 if (!Directory.Exists(TargetFolder))
                     Directory.CreateDirectory(TargetFolder);
 
@@ -99,6 +124,10 @@ namespace uintptrDPI
             catch (Exception ex)
             {
                 ErrorHandler.HandleError(ex, "An error occurred during service installation.");
+            }
+            finally
+            {
+                lblDownloadStatus.Text = Resources.DownloadStatusReady;
             }
         }
 
@@ -145,17 +174,20 @@ namespace uintptrDPI
 
             if (status != null)
             {
-                lblStatus.Text = $"{Resources.StatusLabel}: {GetLocalizedStatusString(status.Status)}";
-                Log($"Service status: {GetLocalizedStatusString(status.Status)}");
-                bool isRunning = status.Status == System.ServiceProcess.ServiceControllerStatus.Running;
+                var statusText = GetLocalizedStatusString(status.Status);
+                var statusColors = GetStatusColors(status.Status);
+                UpdateStatusUI(statusText, statusColors.backColor, statusColors.foreColor);
+                Log($"Service status: {statusText}");
+                bool isRunning = status.Status == ServiceControllerStatus.Running;
                 btnStartService.Enabled = !isRunning;
                 btnStopService.Enabled = isRunning;
-                btnInstallService.Enabled = false; // Should only be enabled if service is not installed
+                btnInstallService.Enabled = false;
                 btnUninstallService.Enabled = true;
             }
             else
             {
-                lblStatus.Text = $"{Resources.StatusLabel}: {Resources.StatusNotInstalled}";
+                var statusColors = GetStatusColors(null);
+                UpdateStatusUI(Resources.StatusNotInstalled, statusColors.backColor, statusColors.foreColor);
                 Log("Service is not installed.");
                 btnStartService.Enabled = false;
                 btnStopService.Enabled = false;
@@ -164,17 +196,49 @@ namespace uintptrDPI
             }
         }
 
-        private string GetLocalizedStatusString(System.ServiceProcess.ServiceControllerStatus status)
+        private void UpdateStatusUI(string statusText, Color backColor, Color foreColor)
+        {
+            lblStatus.Text = $"{Resources.StatusLabel}: {statusText}";
+            lblStatus.BackColor = backColor;
+            lblStatus.ForeColor = foreColor;
+        }
+
+        private (Color backColor, Color foreColor) GetStatusColors(ServiceControllerStatus? status)
+        {
+            if (status == null)
+            {
+                return (Color.FromArgb(230, 235, 242), Color.FromArgb(90, 96, 102));
+            }
+
+            switch (status.Value)
+            {
+                case ServiceControllerStatus.Running:
+                    return (Color.FromArgb(220, 245, 228), Color.FromArgb(29, 122, 64));
+                case ServiceControllerStatus.Stopped:
+                    return (Color.FromArgb(255, 242, 214), Color.FromArgb(170, 92, 0));
+                case ServiceControllerStatus.Paused:
+                    return (Color.FromArgb(255, 236, 240), Color.FromArgb(176, 49, 77));
+                case ServiceControllerStatus.StopPending:
+                case ServiceControllerStatus.StartPending:
+                case ServiceControllerStatus.ContinuePending:
+                case ServiceControllerStatus.PausePending:
+                    return (Color.FromArgb(224, 232, 255), Color.FromArgb(60, 88, 160));
+                default:
+                    return (Color.FromArgb(230, 235, 242), Color.FromArgb(90, 96, 102));
+            }
+        }
+
+        private string GetLocalizedStatusString(ServiceControllerStatus status)
         {
             switch (status)
             {
-                case System.ServiceProcess.ServiceControllerStatus.Running: return Resources.StatusRunning;
-                case System.ServiceProcess.ServiceControllerStatus.Stopped: return Resources.StatusStopped;
-                case System.ServiceProcess.ServiceControllerStatus.Paused: return Resources.StatusPaused;
-                case System.ServiceProcess.ServiceControllerStatus.StopPending: return Resources.StatusStopPending;
-                case System.ServiceProcess.ServiceControllerStatus.StartPending: return Resources.StatusStartPending;
-                case System.ServiceProcess.ServiceControllerStatus.ContinuePending: return Resources.StatusContinuePending;
-                case System.ServiceProcess.ServiceControllerStatus.PausePending: return Resources.StatusPausePending;
+                case ServiceControllerStatus.Running: return Resources.StatusRunning;
+                case ServiceControllerStatus.Stopped: return Resources.StatusStopped;
+                case ServiceControllerStatus.Paused: return Resources.StatusPaused;
+                case ServiceControllerStatus.StopPending: return Resources.StatusStopPending;
+                case ServiceControllerStatus.StartPending: return Resources.StatusStartPending;
+                case ServiceControllerStatus.ContinuePending: return Resources.StatusContinuePending;
+                case ServiceControllerStatus.PausePending: return Resources.StatusPausePending;
                 default: return status.ToString();
             }
         }
@@ -209,7 +273,7 @@ namespace uintptrDPI
                 richTextBoxLogs.Invoke(new Action(() => Log(message, isError)));
                 return;
             }
-            richTextBoxLogs.SelectionColor = isError ? Color.Red : Color.White;
+            richTextBoxLogs.SelectionColor = isError ? Color.FromArgb(176, 49, 77) : Color.FromArgb(33, 37, 41);
             richTextBoxLogs.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
             richTextBoxLogs.ScrollToCaret();
         }

@@ -16,7 +16,25 @@
     <value>Uninstall Service</value>
   </data>
   <data name="TitleLabel" xml:space="preserve">
-    <value>GoodbyeDPI Installer</value>
+    <value>GoodbyeDPI Manager</value>
+  </data>
+  <data name="SubtitleLabel" xml:space="preserve">
+    <value>Manage the GoodbyeDPI service and monitor activity.</value>
+  </data>
+  <data name="ActionsGroupLabel" xml:space="preserve">
+    <value>Service Actions</value>
+  </data>
+  <data name="LogsGroupLabel" xml:space="preserve">
+    <value>Activity Log</value>
+  </data>
+  <data name="DownloadStatusReady" xml:space="preserve">
+    <value>Download status: Ready</value>
+  </data>
+  <data name="DownloadStatusStarting" xml:space="preserve">
+    <value>Download status: Preparing...</value>
+  </data>
+  <data name="DownloadStatusInProgress" xml:space="preserve">
+    <value>Downloading</value>
   </data>
   <data name="LanguageLabel" xml:space="preserve">
     <value>Language</value>

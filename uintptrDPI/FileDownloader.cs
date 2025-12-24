@@ -12,12 +12,14 @@ namespace uintptrDPI
         private readonly HttpClient _httpClient;
         private readonly ProgressBar? _progressBar;
         private readonly Label? _statusLabel;
+        public string ProgressPrefix { get; set; }
 
-        public FileDownloader(ProgressBar? progressBar = null, Label? statusLabel = null)
+        public FileDownloader(ProgressBar? progressBar = null, Label? statusLabel = null, string progressPrefix = "Downloading")
         {
             _httpClient = new HttpClient();
             _progressBar = progressBar;
             _statusLabel = statusLabel;
+            ProgressPrefix = progressPrefix;
         }
 
         public async Task<string> DownloadFileAsync(string url, string destinationPath, string? expectedHash = null)
@@ -53,8 +55,9 @@ namespace uintptrDPI
                             {
                                 _progressBar.Value = (int)totalRead;
                                 if (_statusLabel != null) {
+                                    var prefix = string.IsNullOrWhiteSpace(ProgressPrefix) ? "Downloading" : ProgressPrefix;
                                     _statusLabel.Invoke((MethodInvoker)(() => 
-                                        _statusLabel.Text = $"Downloading: {totalRead * 100 / totalBytes}%"
+                                        _statusLabel.Text = $"{prefix}: {totalRead * 100 / totalBytes}%"
                                     ));
                                 }
                             }

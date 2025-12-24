@@ -86,6 +86,51 @@ namespace uintptrDPI.Properties {
                 return ResourceManager.GetString("LanguageLabel", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Service Actions.
+        /// </summary>
+        public static string ActionsGroupLabel {
+            get {
+                return ResourceManager.GetString("ActionsGroupLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Activity Log.
+        /// </summary>
+        public static string LogsGroupLabel {
+            get {
+                return ResourceManager.GetString("LogsGroupLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download status: Ready.
+        /// </summary>
+        public static string DownloadStatusReady {
+            get {
+                return ResourceManager.GetString("DownloadStatusReady", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Download status: Preparing...
+        /// </summary>
+        public static string DownloadStatusStarting {
+            get {
+                return ResourceManager.GetString("DownloadStatusStarting", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading.
+        /// </summary>
+        public static string DownloadStatusInProgress {
+            get {
+                return ResourceManager.GetString("DownloadStatusInProgress", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Start Service.
@@ -106,11 +151,20 @@ namespace uintptrDPI.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to GoodbyeDPI Management Panel.
+        ///   Looks up a localized string similar to GoodbyeDPI Manager.
         /// </summary>
         public static string TitleLabel {
             get {
                 return ResourceManager.GetString("TitleLabel", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Manage the GoodbyeDPI service and monitor activity..
+        /// </summary>
+        public static string SubtitleLabel {
+            get {
+                return ResourceManager.GetString("SubtitleLabel", resourceCulture);
             }
         }
         

@@ -16,10 +16,28 @@
     <value>Servisi Kaldır</value>
   </data>
   <data name="TitleLabel" xml:space="preserve">
-    <value>GoodbyeDPI Installer</value>
+    <value>GoodbyeDPI Yöneticisi</value>
+  </data>
+  <data name="SubtitleLabel" xml:space="preserve">
+    <value>GoodbyeDPI hizmetini yönetin ve etkinliği izleyin.</value>
   </data>
   <data name="LanguageLabel" xml:space="preserve">
     <value>Dil</value>
+  </data>
+  <data name="ActionsGroupLabel" xml:space="preserve">
+    <value>Servis İşlemleri</value>
+  </data>
+  <data name="LogsGroupLabel" xml:space="preserve">
+    <value>Etkinlik Günlüğü</value>
+  </data>
+  <data name="DownloadStatusReady" xml:space="preserve">
+    <value>İndirme durumu: Hazır</value>
+  </data>
+  <data name="DownloadStatusStarting" xml:space="preserve">
+    <value>İndirme durumu: Hazırlanıyor...</value>
+  </data>
+  <data name="DownloadStatusInProgress" xml:space="preserve">
+    <value>İndiriliyor</value>
   </data>
   <data name="StatusLabel" xml:space="preserve">
     <value>Durum</value>
